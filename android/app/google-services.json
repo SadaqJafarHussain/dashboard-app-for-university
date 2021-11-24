@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "854634270478",
+    "project_id": "smart-tv-83137",
+    "storage_bucket": "smart-tv-83137.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:854634270478:android:cf8c0bb34fe20e5e23115f",
+        "android_client_info": {
+          "package_name": "com.freelancing.smart_tv"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "854634270478-n7pbeh2hje0ocsnusd0phv4kjq0qt3th.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEw1BvTbjr6QKcL639jZ7JkKsFCjc1lN8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "854634270478-n7pbeh2hje0ocsnusd0phv4kjq0qt3th.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
