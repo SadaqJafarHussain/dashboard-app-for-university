@@ -1,22 +1,93 @@
-import 'dart:async';
-import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
-import 'package:intl/intl.dart'as intel;
-import 'package:firebase_core/firebase_core.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:smart_tv/table.dar.dart';
-import 'package:smart_tv/widgets/photo_or_video_widget.dart';
+import 'package:smart_tv/Providers/app_provider.dart';
+import 'package:smart_tv/widgets/loading_page.dart';
+
+import 'home_page.dart';
+
 
 void main() async{
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const MyApp());
+  HttpOverrides.global = MyHttpOverrides();
+  runApp(
+    MultiProvider(
+    providers: [
+      ChangeNotifierProvider(
+        create: (_) => AppProvider(),
+      ),
+    ],
+    child: RestartWidget(
+        child: MyApp()
+    ),
+  ),
+
+  );
+}
+class MyHttpOverrides extends HttpOverrides{
+  @override
+  HttpClient createHttpClient(SecurityContext context){
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port)=> true;
+  }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class RestartWidget extends StatefulWidget {
+  RestartWidget({@required this.child});
 
+  final Widget child;
+
+  static void restartApp(BuildContext context) {
+    context.findAncestorStateOfType<_RestartWidgetState>().restartApp();
+  }
+
+  @override
+  _RestartWidgetState createState() => _RestartWidgetState();
+}
+
+class _RestartWidgetState extends State<RestartWidget> {
+
+  Key key = UniqueKey();
+
+  void restartApp() {
+    setState(() {
+      key = UniqueKey();
+    });
+  }
+  @override
+  void initState() {
+    super.initState();
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return KeyedSubtree(
+      key: key,
+      child: widget.child,
+    );
+  }
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({Key key}) : super(key: key);
+
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    Future.delayed(Duration(microseconds: 1)).then((value) async{
+      WidgetsFlutterBinding.ensureInitialized();
+      await Provider.of<AppProvider>(context,listen: false).internetChecker();
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Sizer(
@@ -25,74 +96,13 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: 'Flutter Demo',
           theme: ThemeData(
-
             primarySwatch: Colors.blue,
           ),
-          home:const  MyHomePage(),
+          home:  MyHomePage(),
         );
       },
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
- const MyHomePage({Key? key}) : super(key: key);
-
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-
-  List table=[];
-  List adds=[];
-
-@override
-  void initState() {
-    super.initState();
-  }
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        body: StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance.collection("isThereAdd").snapshots(),
-          builder: (context,snapshot){
-            if(snapshot.connectionState==ConnectionState.waiting){
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-            var add=(snapshot.data!.docs.first.data() as Map)["isAdd"];
-            if(add.toString().trim()=="0") {
-              return StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection("table").snapshots(),
-                builder: (context,snapshot){
-                  if(snapshot.connectionState==ConnectionState.waiting){
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                 return SchoolTable(table: snapshot.data!.docs);
-                });
-            }
-            else{
-              return StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance.collection("adds").snapshots(),
-                  builder: (context,snapshot){
-                    if(snapshot.connectionState==ConnectionState.waiting||!snapshot.hasData){
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-                   return snapshot.data!.docs.first["image"]!=""?
-                   PhotoVideoViewWidget( type: "image", url: snapshot.data!.docs.first["image"],time: snapshot.data!.docs.first["add_duration"],):
-                   PhotoVideoViewWidget(type: "video", url: snapshot.data!.docs.first["video"],time:snapshot.data!.docs.first["add_duration"]);
-                  });
-            }
-          },
-        ),
-                  );
-  }
-}
 
